@@ -3,6 +3,7 @@ from django.templatetags.static import static
 import json
 
 from .models import Product, Order, OrderItems
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -62,6 +63,22 @@ def product_list_api(request):
 @api_view(['POST'])
 def register_order(request):
     request_body = request.data
+
+    if not request_body.get('products'):
+        return Response(
+            {
+                'error': 'Поле "products" не заполнено'
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    elif not isinstance(request_body['products'], list):
+        return Response(
+            {
+                'error': 'Поле "products" недопустимого типа'
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     order = Order.objects.create(
         first_name=request_body['firstname'],
         last_name=request_body['lastname'],
