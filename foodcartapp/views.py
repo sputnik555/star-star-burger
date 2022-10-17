@@ -1,11 +1,29 @@
 from django.http import JsonResponse
 from django.templatetags.static import static
-import json
 
 from .models import Product, Order, OrderItems
-from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.serializers import ModelSerializer, ValidationError
+
+
+class OrderSerializer(ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['firstname', 'lastname', 'phonenumber']
+
+
+class OrderItemSerializer(ModelSerializer):
+    class Meta:
+        model = OrderItems
+        fields = ['product', 'quantity']
+
+
+def validate_order(order):
+    serializer = OrderSerializer(data=order)
+    serializer.is_valid(raise_exception=True)
+    item_serializer = OrderItemSerializer(data=order.get('products'), many=True, allow_empty=False)
+    item_serializer.is_valid(raise_exception=True)
 
 
 def banners_list_api(request):
@@ -62,30 +80,15 @@ def product_list_api(request):
 
 @api_view(['POST'])
 def register_order(request):
-    request_body = request.data
-
-    if not request_body.get('products'):
-        return Response(
-            {
-                'error': 'Поле "products" не заполнено'
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    elif not isinstance(request_body['products'], list):
-        return Response(
-            {
-                'error': 'Поле "products" недопустимого типа'
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+    validate_order(request.data)
 
     order = Order.objects.create(
-        first_name=request_body['firstname'],
-        last_name=request_body['lastname'],
-        phone_number=request_body['phonenumber'],
+        firstname=request.data['firstname'],
+        lastname=request.data['lastname'],
+        phonenumber=request.data['phonenumber'],
     )
 
-    for product in request_body['products']:
+    for product in request.data['products']:
         OrderItems.objects.create(
             order=order,
             product=Product.objects.get(id=product['product']),
@@ -93,3 +96,4 @@ def register_order(request):
         )
 
     return Response({})
+
