@@ -3,6 +3,8 @@ from django.templatetags.static import static
 import json
 
 from .models import Product, Order, OrderItems
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 
 def banners_list_api(request):
@@ -57,9 +59,9 @@ def product_list_api(request):
     })
 
 
+@api_view(['POST'])
 def register_order(request):
-    request_body = json.loads(request.body.decode())
-
+    request_body = request.data
     order = Order.objects.create(
         first_name=request_body['firstname'],
         last_name=request_body['lastname'],
@@ -73,4 +75,4 @@ def register_order(request):
             quantity=product['quantity']
         )
 
-    return JsonResponse({})
+    return Response({})
