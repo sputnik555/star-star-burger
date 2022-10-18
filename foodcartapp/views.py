@@ -10,7 +10,7 @@ from rest_framework.serializers import ModelSerializer, ValidationError
 class OrderSerializer(ModelSerializer):
     class Meta:
         model = Order
-        fields = ['firstname', 'lastname', 'phonenumber']
+        fields = ['id', 'firstname', 'lastname', 'phonenumber']
 
 
 class OrderItemSerializer(ModelSerializer):
@@ -24,6 +24,11 @@ def validate_order(order):
     serializer.is_valid(raise_exception=True)
     item_serializer = OrderItemSerializer(data=order.get('products'), many=True, allow_empty=False)
     item_serializer.is_valid(raise_exception=True)
+
+
+def serialize_order(order):
+    serializer = OrderSerializer(order)
+    return serializer.data
 
 
 def banners_list_api(request):
@@ -94,6 +99,5 @@ def register_order(request):
             product=Product.objects.get(id=product['product']),
             quantity=product['quantity']
         )
-
-    return Response({})
+    return Response(serialize_order(order))
 
