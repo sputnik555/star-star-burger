@@ -10,7 +10,7 @@ from rest_framework.serializers import ModelSerializer, ValidationError
 class OrderSerializer(ModelSerializer):
     class Meta:
         model = Order
-        fields = ['id', 'firstname', 'lastname', 'phonenumber']
+        fields = ['id', 'firstname', 'lastname', 'phonenumber', 'address']
 
 
 class OrderItemSerializer(ModelSerializer):
@@ -91,6 +91,7 @@ def register_order(request):
         firstname=request.data['firstname'],
         lastname=request.data['lastname'],
         phonenumber=request.data['phonenumber'],
+        address=request.data['address']
     )
 
     for product in request.data['products']:
