@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F, Sum
 from django.core.validators import MinValueValidator
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -134,6 +135,11 @@ class Order(models.Model):
         verbose_name = 'Заказ'
         verbose_name_plural = 'Заказы'
 
+    def price(self):
+        order_price = self.products.aggregate(total_price=Sum(F('quantity')*F('price'))).get('total_price')
+        return order_price
+
+
 class OrderItems(models.Model):
     order = models.ForeignKey(
         Order,
@@ -148,8 +154,13 @@ class OrderItems(models.Model):
     )
     quantity = models.PositiveIntegerField(
         verbose_name='Количество',
-        blank=False,
         validators=[MinValueValidator(1)]
+    )
+    price = models.DecimalField(
+        verbose_name='Цена',
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
     )
 
     class Meta:
