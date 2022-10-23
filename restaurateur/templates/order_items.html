@@ -18,8 +18,9 @@
       <th>Клиент</th>
       <th>Телефон</th>
       <th>Адрес доставки</th>
-      <th>Сумма</th>
       <th>Комментарий</th>
+      <th>Сумма</th>
+      <th>Способ оплаты</th>
       <th>Ссылка на админку</th>
     </tr>
 
@@ -32,6 +33,7 @@
         <td>{{ item.address }}</td>
         <td>{{ item.comment }}</td>
         <td>{{ item.price|default_if_none:0 }}</td>
+        <td>{{ item.get_payment_method_display }}</td>
         <td>
           <a href="{% url 'admin:foodcartapp_order_change' item.pk %}?next={{request.path|urlencode}}">
           Редактировать

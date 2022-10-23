@@ -129,10 +129,16 @@ class Order(models.Model):
     DELIVERED = 'D'
     IN_PROGRESS = 'P'
     NEW = 'N'
+    CARD = 'CARD'
+    CASH = 'CASH'
     STATUS_CHOICES = [
         (NEW, 'Новый'),
         (IN_PROGRESS, 'Выполняется'),
         (DELIVERED, 'Доставлен')
+    ]
+    PAYMENT_METHOD_CHOICES = [
+        (CARD, 'Картой'),
+        (CASH, 'Наличными')
     ]
 
     firstname = models.CharField(max_length=100, verbose_name='Фамилия')
@@ -145,6 +151,13 @@ class Order(models.Model):
         default=NEW,
         db_index=True,
         verbose_name='Статус'
+    )
+    payment_method = models.CharField(
+        max_length=4,
+        choices=PAYMENT_METHOD_CHOICES,
+        default=CASH,
+        db_index=True,
+        verbose_name='Способ оплаты'
     )
     comment = models.TextField(blank=True, verbose_name='Комментарий')
 
