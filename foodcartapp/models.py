@@ -1,6 +1,9 @@
+import datetime
+
 from django.db import models
 from django.db.models import F, Sum
 from django.core.validators import MinValueValidator
+from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
 
@@ -160,6 +163,14 @@ class Order(models.Model):
         verbose_name='Способ оплаты'
     )
     comment = models.TextField(blank=True, verbose_name='Комментарий')
+    created_at = models.DateTimeField(
+        default=timezone.now,
+        verbose_name='Дата создания',
+        blank=True,
+        null=True
+    )
+    called_at = models.DateTimeField(verbose_name='Дата звонка', blank=True, null=True)
+    delivered_at = models.DateTimeField(verbose_name='Дата доставки', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Заказ'
