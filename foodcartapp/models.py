@@ -146,6 +146,7 @@ class Order(models.Model):
         db_index=True,
         verbose_name='Статус'
     )
+    comment = models.TextField(blank=True, verbose_name='Комментарий')
 
     class Meta:
         verbose_name = 'Заказ'

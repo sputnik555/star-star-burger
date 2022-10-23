@@ -19,7 +19,8 @@
       <th>Телефон</th>
       <th>Адрес доставки</th>
       <th>Сумма</th>
-       <th>Ссылка на админку</th>
+      <th>Комментарий</th>
+      <th>Ссылка на админку</th>
     </tr>
 
     {% for item in order_items %}
@@ -29,6 +30,7 @@
         <td>{{ item.firstname }} {{ item.lastname }}</td>
         <td>{{ item.phonenumber }}</td>
         <td>{{ item.address }}</td>
+        <td>{{ item.comment }}</td>
         <td>{{ item.price|default_if_none:0 }}</td>
         <td>
           <a href="{% url 'admin:foodcartapp_order_change' item.pk %}?next={{request.path|urlencode}}">
