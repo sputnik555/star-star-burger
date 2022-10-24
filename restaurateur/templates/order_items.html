@@ -21,6 +21,7 @@
       <th>Комментарий</th>
       <th>Сумма</th>
       <th>Способ оплаты</th>
+      <th>Рестораны</th>
       <th>Ссылка на админку</th>
     </tr>
 
@@ -34,6 +35,17 @@
         <td>{{ item.comment }}</td>
         <td>{{ item.price|default_if_none:0 }}</td>
         <td>{{ item.get_payment_method_display }}</td>
+        {% if item.restaurant %}
+        <td>Готовится {{ item.restaurant }}</td>
+        {% else %}
+        <td>Может быть приготовлен:
+          <ul>
+          {% for restaurant in item.available_restaurants %}
+          <li>{{ restaurant }}</li>
+          {% endfor %}
+          </ul>
+        </td>
+        {% endif %}
         <td>
           <a href="{% url 'admin:foodcartapp_order_change' item.pk %}?next={{request.path|urlencode}}">
           Редактировать

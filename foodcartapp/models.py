@@ -163,6 +163,13 @@ class Order(models.Model):
         verbose_name='Способ оплаты'
     )
     comment = models.TextField(blank=True, verbose_name='Комментарий')
+    restaurant = models.ForeignKey(
+        Restaurant,
+        verbose_name="Ресторан",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
     created_at = models.DateTimeField(
         default=timezone.now,
         verbose_name='Дата создания',
