@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.shortcuts import redirect, render
 from django.views import View
 from django.urls import reverse_lazy
@@ -9,7 +10,9 @@ from django.contrib.auth import views as auth_views
 
 
 from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem, OrderItems
-
+import requests
+from geopy import distance
+from operator import attrgetter, itemgetter
 
 class Login(forms.Form):
     username = forms.CharField(
@@ -59,6 +62,24 @@ class LogoutView(auth_views.LogoutView):
     next_page = reverse_lazy('restaurateur:login')
 
 
+def fetch_coordinates(apikey, address):
+    base_url = "https://geocode-maps.yandex.ru/1.x"
+    response = requests.get(base_url, params={
+        "geocode": address,
+        "apikey": apikey,
+        "format": "json",
+    })
+    response.raise_for_status()
+    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
+
+    if not found_places:
+        return None
+
+    most_relevant = found_places[0]
+    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
+    return lon, lat
+
+
 def is_manager(user):
     return user.is_staff  # FIXME replace with specific permission
 
@@ -93,21 +114,29 @@ def view_restaurants(request):
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
     orders = Order.objects.prefetch_related('products').exclude(status=Order.DELIVERED)
-    products_in_order = OrderItems.objects.filter(order__in=orders).values_list('product', flat=True)
-
-    restaurant_menu_items = RestaurantMenuItem.objects.filter(product__in=products_in_order, availability=True)
-    restaurants_with_products = {}
+    products_from_orders = OrderItems.objects.filter(order__in=orders).values_list('product', flat=True)
+    restaurant_menu_items = RestaurantMenuItem.objects.filter(product__in=products_from_orders, availability=True)
+    products_in_restaurants = {}
     for menu_item in restaurant_menu_items:
-        if menu_item.restaurant not in restaurants_with_products:
-            restaurants_with_products[menu_item.restaurant] = set()
-        restaurants_with_products[menu_item.restaurant].add(menu_item.product)
+        products_in_restaurants.setdefault(menu_item.restaurant, set()).add(menu_item.product)
 
     for order in orders:
+        order_coordinates = fetch_coordinates(settings.YANDEX_GEO_TOKEN, order.address)
         order.available_restaurants = []
-        for restaurant, restaurant_products in restaurants_with_products.items():
-            order_products = {item.product for item in order.products.all()}
-            if order_products.issubset(restaurant_products):
-                order.available_restaurants.append(restaurant)
+        for restaurant, restaurant_products in products_in_restaurants.items():
+            products_in_order = {item.product for item in order.products.all()}
+            if products_in_order.issubset(restaurant_products):
+                restaurant_coordinates = fetch_coordinates(settings.YANDEX_GEO_TOKEN, restaurant.address)
+                distance_to_restaurant = 0
+                if restaurant_coordinates and order_coordinates:
+                    distance_to_restaurant = distance.distance(order_coordinates, restaurant_coordinates).m
+                order.available_restaurants.append(
+                    {
+                        'restaurant': restaurant,
+                        'distance': distance_to_restaurant
+                    }
+                )
+            order.available_restaurants.sort(key=itemgetter('distance'))
 
     return render(request, template_name='order_items.html', context={
         'order_items': orders
