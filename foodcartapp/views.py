@@ -1,8 +1,35 @@
+from django.db import transaction
 from django.http import JsonResponse
 from django.templatetags.static import static
 
+from .models import Product, Order, OrderItems
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.serializers import ModelSerializer, ValidationError
 
-from .models import Product
+
+class OrderSerializer(ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ['id', 'firstname', 'lastname', 'phonenumber', 'address']
+
+
+class OrderItemSerializer(ModelSerializer):
+    class Meta:
+        model = OrderItems
+        fields = ['product', 'quantity']
+
+
+def validate_order(order):
+    serializer = OrderSerializer(data=order)
+    serializer.is_valid(raise_exception=True)
+    item_serializer = OrderItemSerializer(data=order.get('products'), many=True, allow_empty=False)
+    item_serializer.is_valid(raise_exception=True)
+
+
+def serialize_order(order):
+    serializer = OrderSerializer(order)
+    return serializer.data
 
 
 def banners_list_api(request):
@@ -57,6 +84,23 @@ def product_list_api(request):
     })
 
 
+@api_view(['POST'])
+@transaction.atomic
 def register_order(request):
-    # TODO это лишь заглушка
-    return JsonResponse({})
+    validate_order(request.data)
+    order = Order.objects.create(
+        firstname=request.data['firstname'],
+        lastname=request.data['lastname'],
+        phonenumber=request.data['phonenumber'],
+        address=request.data['address']
+    )
+    for order_item in request.data['products']:
+        product = Product.objects.get(id=order_item['product'])
+        OrderItems.objects.create(
+            order=order,
+            product=product,
+            quantity=order_item['quantity'],
+            price=product.price
+        )
+    return Response(serialize_order(order))
+
