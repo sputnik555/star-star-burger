@@ -20,6 +20,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', ['127.0.0.1', 'localhost'])
 INSTALLED_APPS = [
     'foodcartapp.apps.FoodcartappConfig',
     'restaurateur.apps.RestaurateurConfig',
+    'coordinates.apps.CoordinatesConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -126,3 +127,4 @@ STATICFILES_DIRS = [
 ]
 
 YANDEX_GEO_TOKEN = env('YANDEX_GEO_TOKEN')
+COORDINATES_LIFETIME = env.int('COORDINATES_LIFETIME')

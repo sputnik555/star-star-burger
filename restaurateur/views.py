@@ -1,18 +1,18 @@
+from operator import itemgetter
+
 from django import forms
 from django.conf import settings
-from django.shortcuts import redirect, render
-from django.views import View
-from django.urls import reverse_lazy
-from django.contrib.auth.decorators import user_passes_test
-
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
+from django.views import View
+from geopy import distance
 
-
+from coordinates.models import PlaceCoordinates
 from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem, OrderItems
 import requests
-from geopy import distance
-from operator import attrgetter, itemgetter
 
 class Login(forms.Form):
     username = forms.CharField(
@@ -62,22 +62,16 @@ class LogoutView(auth_views.LogoutView):
     next_page = reverse_lazy('restaurateur:login')
 
 
-def fetch_coordinates(apikey, address):
-    base_url = "https://geocode-maps.yandex.ru/1.x"
-    response = requests.get(base_url, params={
-        "geocode": address,
-        "apikey": apikey,
-        "format": "json",
-    })
-    response.raise_for_status()
-    found_places = response.json()['response']['GeoObjectCollection']['featureMember']
-
-    if not found_places:
-        return None
-
-    most_relevant = found_places[0]
-    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
-    return lon, lat
+def fetch_coordinates(address):
+    place_coordinates, created = PlaceCoordinates.objects.get_or_create(address=address)
+    place_coordinates.fill_coordinates()
+    if created or not place_coordinates.is_coordinates_filled():
+        try:
+            place_coordinates.fill_coordinates()
+        except requests.RequestException:
+            pass
+    if place_coordinates.is_coordinates_filled():
+        return (place_coordinates.latitude, place_coordinates.longitude)
 
 
 def is_manager(user):
@@ -121,12 +115,14 @@ def view_orders(request):
         products_in_restaurants.setdefault(menu_item.restaurant, set()).add(menu_item.product)
 
     for order in orders:
-        order_coordinates = fetch_coordinates(settings.YANDEX_GEO_TOKEN, order.address)
+        order_coordinates = fetch_coordinates(order.address)
+        print(order_coordinates)
         order.available_restaurants = []
         for restaurant, restaurant_products in products_in_restaurants.items():
             products_in_order = {item.product for item in order.products.all()}
             if products_in_order.issubset(restaurant_products):
-                restaurant_coordinates = fetch_coordinates(settings.YANDEX_GEO_TOKEN, restaurant.address)
+                restaurant_coordinates = fetch_coordinates(restaurant.address)
+                print(restaurant_coordinates)
                 distance_to_restaurant = 0
                 if restaurant_coordinates and order_coordinates:
                     distance_to_restaurant = distance.distance(order_coordinates, restaurant_coordinates).m
