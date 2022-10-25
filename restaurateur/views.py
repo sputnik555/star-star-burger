@@ -95,8 +95,8 @@ def view_orders(request):
     orders = Order.objects.prefetch_related('products').exclude(status=Order.DELIVERED)
     products_in_order = OrderItems.objects.filter(order__in=orders).values_list('product', flat=True)
 
-    restaurants_with_products = {}
     restaurant_menu_items = RestaurantMenuItem.objects.filter(product__in=products_in_order, availability=True)
+    restaurants_with_products = {}
     for menu_item in restaurant_menu_items:
         if menu_item.restaurant not in restaurants_with_products:
             restaurants_with_products[menu_item.restaurant] = set()
