@@ -94,13 +94,18 @@ def register_order(request):
         phonenumber=request.data['phonenumber'],
         address=request.data['address']
     )
+    order_items = []
     for order_item in request.data['products']:
         product = Product.objects.get(id=order_item['product'])
-        OrderItems.objects.create(
-            order=order,
-            product=product,
-            quantity=order_item['quantity'],
-            price=product.price
+        order_items.append(
+            OrderItems(
+                order=order,
+                product=product,
+                quantity=order_item['quantity'],
+                price=product.price
+            )
         )
+    OrderItems.objects.bulk_create(order_items)
+
     return Response(serialize_order(order))
 
