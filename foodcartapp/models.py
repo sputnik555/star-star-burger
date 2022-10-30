@@ -184,7 +184,7 @@ class Order(models.Model):
         verbose_name_plural = 'Заказы'
 
     def price(self):
-        order_price = self.products.aggregate(total_price=Sum(F('quantity')*F('price'))).get('total_price')
+        order_price = self.items.aggregate(total_price=Sum(F('quantity')*F('price'))).get('total_price')
         return order_price
 
 
@@ -192,7 +192,7 @@ class OrderItems(models.Model):
     order = models.ForeignKey(
         Order,
         on_delete=models.CASCADE,
-        related_name='products',
+        related_name='items',
         verbose_name='Заказ'
     )
     product = models.ForeignKey(

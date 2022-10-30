@@ -107,7 +107,7 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.prefetch_related('products').exclude(status=Order.DELIVERED)
+    orders = Order.objects.prefetch_related('items').exclude(status=Order.DELIVERED)
     products_from_orders = OrderItems.objects.filter(order__in=orders).values_list('product', flat=True)
     restaurant_menu_items = RestaurantMenuItem.objects.filter(product__in=products_from_orders, availability=True)
     products_in_restaurants = {}
@@ -119,7 +119,7 @@ def view_orders(request):
         print(order_coordinates)
         order.available_restaurants = []
         for restaurant, restaurant_products in products_in_restaurants.items():
-            products_in_order = {item.product for item in order.products.all()}
+            products_in_order = {item.product for item in order.items.all()}
             if products_in_order.issubset(restaurant_products):
                 restaurant_coordinates = fetch_coordinates(restaurant.address)
                 print(restaurant_coordinates)
