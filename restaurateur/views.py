@@ -114,13 +114,11 @@ def view_orders(request):
 
     for order in orders:
         order_coordinates = fetch_coordinates(order.address)
-        print(order_coordinates)
         order.available_restaurants = []
         for restaurant, restaurant_products in products_in_restaurants.items():
             products_in_order = {item.product for item in order.items.all()}
             if products_in_order.issubset(restaurant_products):
                 restaurant_coordinates = fetch_coordinates(restaurant.address)
-                print(restaurant_coordinates)
                 distance_to_restaurant = 0
                 if restaurant_coordinates and order_coordinates:
                     distance_to_restaurant = distance.distance(order_coordinates, restaurant_coordinates).m
