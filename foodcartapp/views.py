@@ -27,11 +27,6 @@ def validate_order(order):
     item_serializer.is_valid(raise_exception=True)
 
 
-def serialize_order(order):
-    serializer = OrderSerializer(order)
-    return serializer.data
-
-
 def banners_list_api(request):
     # FIXME move data to db?
     return JsonResponse([
@@ -106,6 +101,5 @@ def register_order(request):
             )
         )
     OrderItems.objects.bulk_create(order_items)
-
-    return Response(serialize_order(order))
+    return Response(OrderSerializer(order).data)
 
