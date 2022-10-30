@@ -33,12 +33,13 @@ class PlaceCoordinates(models.Model):
 
     def fill_coordinates(self):
         update_time_delta = datetime.timedelta(hours=settings.COORDINATES_LIFETIME)
-        if self.is_coordinates_filled() and timezone.now() - self.update_date < update_time_delta:
+        if self.is_coordinates_filled and timezone.now() - self.update_date < update_time_delta:
             return
         coordinates = get_coordinates(self.address)
         if coordinates:
             self.longitude, self.latitude = coordinates
             self.save()
 
+    @property
     def is_coordinates_filled(self):
         return self.longitude is not None and self.latitude is not None

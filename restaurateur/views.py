@@ -68,7 +68,7 @@ def fetch_coordinates(address):
         place_coordinates.fill_coordinates()
     except requests.RequestException:
         pass
-    if place_coordinates.is_coordinates_filled():
+    if place_coordinates.is_coordinates_filled:
         return (place_coordinates.latitude, place_coordinates.longitude)
 
 
