@@ -57,7 +57,13 @@ pip install -r requirements.txt
 Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
 ```sh
 SECRET_KEY=django-insecure-0if40nf4nf93n4
+YANDEX_GEO_TOKEN=*
+COORDINATES_LIFETIME=*
 ```
+В переменной `YANDEX_GEO_TOKEN` укажите токен сервиса [Геокодер от Яндекс](https://yandex.ru/dev/maps/geocoder/doc/desc/concepts/about.html)
+
+В переменной `COORDINATES_LIFETIME` указывается период,
+в течении которого данные координат будут кешироваться в БД (в часах)
 
 Создайте файл базы данных SQLite и отмигрируйте её следующей командой:
 
