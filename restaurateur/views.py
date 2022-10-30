@@ -63,13 +63,11 @@ class LogoutView(auth_views.LogoutView):
 
 
 def fetch_coordinates(address):
-    place_coordinates, created = PlaceCoordinates.objects.get_or_create(address=address)
-    place_coordinates.fill_coordinates()
-    if created or not place_coordinates.is_coordinates_filled():
-        try:
-            place_coordinates.fill_coordinates()
-        except requests.RequestException:
-            pass
+    place_coordinates, _ = PlaceCoordinates.objects.get_or_create(address=address)
+    try:
+        place_coordinates.fill_coordinates()
+    except requests.RequestException:
+        pass
     if place_coordinates.is_coordinates_filled():
         return (place_coordinates.latitude, place_coordinates.longitude)
 

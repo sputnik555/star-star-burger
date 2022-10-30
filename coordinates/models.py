@@ -28,17 +28,16 @@ class PlaceCoordinates(models.Model):
     update_date = models.DateTimeField(
         verbose_name='Дата обновления',
         null=True,
+        auto_now=True,
     )
 
     def fill_coordinates(self):
         update_time_delta = datetime.timedelta(hours=settings.COORDINATES_LIFETIME)
-        if self.update_date and timezone.now() - self.update_date < update_time_delta:
+        if self.is_coordinates_filled() and timezone.now() - self.update_date < update_time_delta:
             return
-
         coordinates = get_coordinates(self.address)
         if coordinates:
             self.longitude, self.latitude = coordinates
-            self.update_date = timezone.now()
             self.save()
 
     def is_coordinates_filled(self):
