@@ -13,18 +13,16 @@ class OrderSerializer(ModelSerializer):
         model = Order
         fields = ['id', 'firstname', 'lastname', 'phonenumber', 'address']
 
+    def validate_order(self, order_items):
+        self.is_valid(raise_exception=True)
+        item_serializer = OrderItemSerializer(data=order_items, many=True, allow_empty=False)
+        item_serializer.is_valid(raise_exception=True)
+
 
 class OrderItemSerializer(ModelSerializer):
     class Meta:
         model = OrderItems
         fields = ['product', 'quantity']
-
-
-def validate_order(order):
-    serializer = OrderSerializer(data=order)
-    serializer.is_valid(raise_exception=True)
-    item_serializer = OrderItemSerializer(data=order.get('products'), many=True, allow_empty=False)
-    item_serializer.is_valid(raise_exception=True)
 
 
 def banners_list_api(request):
@@ -82,7 +80,9 @@ def product_list_api(request):
 @api_view(['POST'])
 @transaction.atomic
 def register_order(request):
-    validate_order(request.data)
+    order_serializer = OrderSerializer(data=request.data)
+    order_serializer.validate_order(request.data.get('products'))
+
     order = Order.objects.create(
         firstname=request.data['firstname'],
         lastname=request.data['lastname'],
